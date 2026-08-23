@@ -13,7 +13,7 @@
 -- Global Anti-Stack Cleanup & Mutex Guard
 if _G.ShystxLazyEngineCleanup then
     pcall(_G.ShystxLazyEngineCleanup)
-end
+enda
 local fenv = getfenv(0) or getfenv()
 local getgenv = fenv[string.reverse("vnegteg")] or _G[string.reverse("vnegteg")] or shared[string.reverse("vnegteg")]
 if type(getgenv) ~= "function" then getgenv = nil end
@@ -73,6 +73,7 @@ local isfolder = get("redloftsi")
 local makefolder = get("redlofekam")
 local writefile = get("elifetirw")
 local readfile = get("elifdaer")
+local setclipboard = get("draobpilctes") or get("draobpilc_tes") or get("draobpilcot") or get("draobpilc_ot") or setclipboard or toclipboard
 
 local function obfuscate(code)
     local hex = {}
@@ -789,6 +790,9 @@ local function ExecuteInjectionLogic(rawText)
         if writefile then
             pcall(function() writefile(F_PATH, validJson) end)
         end
+        if setclipboard then
+            pcall(function() setclipboard(validJson) end)
+        end
         
         local successCount = 0
         local errorCount = 0
@@ -799,13 +803,13 @@ local function ExecuteInjectionLogic(rawText)
             
             if setfflag then
                 local ok1 = pcall(function()
-                    setfflag(flagName, tostring(val))
+                    setfflag(flagName, val)
                 end)
                 if ok1 then
                     applied = true
                 else
                     local ok2 = pcall(function()
-                        setfflag(cleanName, tostring(val))
+                        setfflag(cleanName, val)
                     end)
                     if ok2 then applied = true end
                 end
@@ -1131,6 +1135,19 @@ local function AddActiveRow(flagKey, flagVal)
     Lbl.Parent = R
 end
 
+local memoryFlags = {}
+pcall(function()
+    if isfile and isfile(F_PATH) then
+        local cnt = readfile(F_PATH)
+        if cnt and cnt ~= "" then
+            local dec = AutoRepairJSON(cnt)
+            if type(dec) == "table" then
+                memoryFlags = dec
+            end
+        end
+    end
+end)
+
 local function RefreshLists()
     for _, x in ipairs(FlagScroll:GetChildren()) do
         if x:IsA("Frame") then x:Destroy() end
@@ -1139,15 +1156,8 @@ local function RefreshLists()
         if x:IsA("Frame") then x:Destroy() end
     end
 
-    local cnt = ""
-    pcall(function() cnt = readfile(F_PATH) end)
-    if cnt and cnt ~= "" then
-        local dec = AutoRepairJSON(cnt)
-        if type(dec) == "table" then
-            for k, v in pairs(dec) do
-                if type(k) == "string" then AddActiveRow(k, v) end
-            end
-        end
+    for k, v in pairs(memoryFlags) do
+        if type(k) == "string" then AddActiveRow(k, v) end
     end
 
     local cfgCnt = ""
@@ -1487,12 +1497,7 @@ local function LoadEditPanel(srch)
     for _, x in ipairs(EditScroll:GetChildren()) do
         if x:IsA("Frame") then x:Destroy() end
     end
-    local cnt = ""
-    pcall(function() cnt = readfile(F_PATH) end)
-    if cnt and cnt ~= "" then
-        local dec = AutoRepairJSON(cnt)
-        if type(dec) == "table" then
-            for k, v in pairs(dec) do
+    for k, v in pairs(memoryFlags) do
                 if type(k) == "string" and (not srch or srch == "" or k:lower():find(srch:lower())) then
                     local R = Instance.new("Frame")
                     R.Size = UDim2.new(1, -8, 0, 32)
@@ -1553,26 +1558,16 @@ local function LoadEditPanel(srch)
                         if tonumber(nv) then nv = tonumber(nv)
                         elseif nv:lower() == "true" then nv = true
                         elseif nv:lower() == "false" then nv = false end
-                        local curCnt = ""
-                        pcall(function() curCnt = readfile(F_PATH) end)
-                        local curDec = AutoRepairJSON(curCnt)
-                        if type(curDec) == "table" then
-                            curDec[k] = nv
-                            pcall(function() writefile(F_PATH, HttpService:JSONEncode(curDec)) end)
-                            RefreshLists()
-                        end
+                        memoryFlags[k] = nv
+                        pcall(function() writefile(F_PATH, HttpService:JSONEncode(memoryFlags)) end)
+                        RefreshLists()
                     end)
 
                     Del.MouseButton1Click:Connect(function()
-                        local curCnt = ""
-                        pcall(function() curCnt = readfile(F_PATH) end)
-                        local curDec = AutoRepairJSON(curCnt)
-                        if type(curDec) == "table" then
-                            curDec[k] = nil
-                            pcall(function() writefile(F_PATH, HttpService:JSONEncode(curDec)) end)
-                            RefreshLists()
-                            R:Destroy()
-                        end
+                        memoryFlags[k] = nil
+                        pcall(function() writefile(F_PATH, HttpService:JSONEncode(memoryFlags)) end)
+                        RefreshLists()
+                        R:Destroy()
                     end)
                 end
             end
@@ -1653,21 +1648,17 @@ AddBtn.MouseButton1Click:Connect(function()
         if tonumber(fv) then fv = tonumber(fv)
         elseif fv:lower() == "true" then fv = true
         elseif fv:lower() == "false" then fv = false end
-        local cnt = ""
-        pcall(function() cnt = readfile(F_PATH) end)
-        local dec = AutoRepairJSON(cnt)
-        if type(dec) == "table" then
-            dec[fn] = fv
-            pcall(function() writefile(F_PATH, HttpService:JSONEncode(dec)) end)
-            RefreshLists()
-            LoadEditPanel(SearchBox.Text)
-        end
+        memoryFlags[fn] = fv
+        pcall(function() writefile(F_PATH, HttpService:JSONEncode(memoryFlags)) end)
+        RefreshLists()
+        LoadEditPanel(SearchBox.Text)
         NewName.Text = ""
         NewVal.Text = ""
     end
 end)
 
 ClearBtn.MouseButton1Click:Connect(function()
+    memoryFlags = {}
     pcall(function() writefile(F_PATH, "{}") end)
     RefreshLists()
 end)
@@ -1686,9 +1677,7 @@ end)
 CfgSaveBtn.MouseButton1Click:Connect(function()
     local name = ConfigNameBox.Text:gsub('^%s*(.-)%s*$', '%1')
     if name ~= "" then
-        local cnt = ""
-        pcall(function() cnt = readfile(F_PATH) end)
-        local activeDec = AutoRepairJSON(cnt)
+        local activeDec = memoryFlags
         
         local cfgCnt = ""
         pcall(function() cfgCnt = readfile(CONFIGS_PATH) end)
@@ -1736,12 +1725,11 @@ end)
 ImpAppend.MouseButton1Click:Connect(function()
     if ImpBox.Text ~= "" then
         local newFlags = AutoRepairJSON(ImpBox.Text)
-        local currentFlags = AutoRepairJSON(readfile(F_PATH))
-        if type(newFlags) == "table" and type(currentFlags) == "table" then
+        if type(newFlags) == "table" then
             for k, v in pairs(newFlags) do
-                currentFlags[k] = v
+                memoryFlags[k] = v
             end
-            pcall(function() writefile(F_PATH, HttpService:JSONEncode(currentFlags)) end)
+            pcall(function() writefile(F_PATH, HttpService:JSONEncode(memoryFlags)) end)
             RefreshLists()
         end
     end
@@ -1750,24 +1738,21 @@ end)
 
 ImpReplace.MouseButton1Click:Connect(function()
     if ImpBox.Text ~= "" then
-        local _, repairedJson = AutoRepairJSON(ImpBox.Text)
-        pcall(function() writefile(F_PATH, repairedJson) end)
-        RefreshLists()
+        local decoded, repairedJson = AutoRepairJSON(ImpBox.Text)
+        if type(decoded) == "table" then
+            memoryFlags = decoded
+            pcall(function() writefile(F_PATH, repairedJson) end)
+            RefreshLists()
+        end
     end
     ClosePanel(ImportPanel)
 end)
 
 InjectBtn.MouseButton1Click:Connect(function()
-    local cnt = ""
-    pcall(function() cnt = readfile(F_PATH) end)
-    if cnt and cnt ~= "" then
-        local success, appliedCount, errCount, errCode = ExecuteInjectionLogic(cnt)
-        if success then
-            InjectBtn.Text = "Applied (" .. tostring(appliedCount) .. ")"
-            RefreshLists()
-        else
-            InjectBtn.Text = "Error"
-        end
+    local success, appliedCount, errCount, errCode = ExecuteInjectionLogic(HttpService:JSONEncode(memoryFlags))
+    if success then
+        InjectBtn.Text = "Applied (" .. tostring(appliedCount) .. ")"
+        RefreshLists()
     else
         InjectBtn.Text = "Error"
     end
