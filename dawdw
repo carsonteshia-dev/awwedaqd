@@ -768,8 +768,8 @@ local function ExecuteInjectionLogic(rawText)
             totalFlags = totalFlags + 1
         end
         
-        if totalFlags < 3 then
-            return false, 0, totalFlags, "INVALID"
+        if totalFlags < 1 then
+            return false, 0, totalFlags, "NO_FLAGS"
         end
 
         if writefile then
@@ -1198,9 +1198,12 @@ local function RefreshLists()
                     Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 4)
 
                     LoadBtn.MouseButton1Click:Connect(function()
-                        pcall(function()
-                            writefile(F_PATH, HttpService:JSONEncode(flagsObj))
-                        end)
+                        if type(flagsObj) == "table" then
+                            memoryFlags = flagsObj
+                            pcall(function()
+                                writefile(F_PATH, HttpService:JSONEncode(memoryFlags))
+                            end)
+                        end
                         LoadBtn.Text = "Loaded"
                         task.delay(1.5, function() LoadBtn.Text = "Load" end)
                         RefreshLists()
