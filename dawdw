@@ -1574,8 +1574,6 @@ local function LoadEditPanel(srch)
                     end)
                 end
             end
-        end
-    end
     EditScroll.CanvasSize = UDim2.new(0, 0, 0, EL.AbsoluteContentSize.Y + 10)
 end
 
