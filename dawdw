@@ -272,7 +272,7 @@ end)
 -- ====================================================================
 -- SELF-CONTAINED PERSISTENT BACKGROUND ENGINE (Auto-Executes On Rejoins/Teleports)
 -- ====================================================================
-local engineBody = [==[
+local function RunEngine()
 -- Hard Reset Previous Connections & States Across Rejoin/Teleport/Re-execution
 if _G.ShystxLazyEngineCleanup then
     pcall(_G.ShystxLazyEngineCleanup)
@@ -693,28 +693,10 @@ local cleanupFunc = function()
 end
 
 _G.ShystxLazyEngineCleanup = cleanupFunc
-]==]
+end
 
 local function StartEngineWithAutoExec()
-    local selfContainedScript = ""
-    pcall(function()
-        local scriptSource = debug.getinfo(1, "S").source
-        local cleanSource = scriptSource:match("@?(.*)")
-        if cleanSource and isfile and isfile(cleanSource) then
-            selfContainedScript = readfile(cleanSource)
-        end
-    end)
-    if selfContainedScript == "" then
-        selfContainedScript = "local __SRC = " .. string.format("%q", engineBody) .. "\n" .. engineBody
-    end
-
-    if queue_on_teleport then
-        pcall(function()
-            queue_on_teleport(obfuscate(selfContainedScript))
-        end)
-    end
-
-    loadstring(selfContainedScript)()
+    pcall(RunEngine)
 end
 
 -- ====================================================================
