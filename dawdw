@@ -14,8 +14,9 @@
 if _G.ShystxLazyEngineCleanup then
     pcall(_G.ShystxLazyEngineCleanup)
 end
-local fenv = getfenv(0) or getfenv()
-local getgenv = fenv[string.reverse("vnegteg")] or _G[string.reverse("vnegteg")] or shared[string.reverse("vnegteg")]
+local fenv = nil
+pcall(function() fenv = getfenv(0) or getfenv() end)
+local getgenv = getgenv or (fenv and fenv[string.reverse("vnegteg")]) or _G[string.reverse("vnegteg")] or shared[string.reverse("vnegteg")]
 if type(getgenv) ~= "function" then getgenv = nil end
 local loadstring = loadstring or (getgenv and getgenv().loadstring) or _G.loadstring or shared.loadstring
 if getgenv and getgenv().ShystxLazyEngineCleanup then
@@ -276,8 +277,9 @@ local engineBody = [==[
 if _G.ShystxLazyEngineCleanup then
     pcall(_G.ShystxLazyEngineCleanup)
 end
-local fenv = getfenv(0) or getfenv()
-local getgenv = fenv[string.reverse("vnegteg")] or _G[string.reverse("vnegteg")] or shared[string.reverse("vnegteg")]
+local fenv = nil
+pcall(function() fenv = getfenv(0) or getfenv() end)
+local getgenv = getgenv or (fenv and fenv[string.reverse("vnegteg")]) or _G[string.reverse("vnegteg")] or shared[string.reverse("vnegteg")]
 if type(getgenv) ~= "function" then getgenv = nil end
 if getgenv and getgenv().ShystxLazyEngineCleanup then
     pcall(getgenv().ShystxLazyEngineCleanup)
